@@ -6,3 +6,6 @@ build:
 
 run:
 	./cmake-build-debug/linda
+
+test:
+	./cmake-build-debug/src/Doctest_tests/Doctest_tests_run
