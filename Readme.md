@@ -25,5 +25,5 @@ sudo make prepare build run
 ## Others
 
 - in order to run application you need to be a superuser. It's necessary for the communication via FIFO.
-- Pipes are stored at: /tmp/fifos
+- Pipes are stored at: /tmp. But you can edit it in the CommunicationService
 - testing framework: [doctest](https://github.com/doctest/doctest)
