@@ -7,7 +7,7 @@
 ```sh
 sudo apt-get update
 sudo apt-get install cmake ninja-build
-make prepare build run
+sudo make prepare build run
 ```
 
 ### Other systems
@@ -19,5 +19,11 @@ make prepare build run
 3. Run Make command
 
     ```sh
-    make prepare build run
+    sudo make prepare build test run
     ```
+
+## Others
+
+- in order to run application you need to be a superuser. It's necessary for the communication via FIFO.
+- Pipes are stored at: /tmp/fifos
+- testing framework: [doctest](https://github.com/doctest/doctest)

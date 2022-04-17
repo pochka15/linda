@@ -13,5 +13,4 @@ using Tuple = std::vector<TupleElement>;
 std::string formatTupleElement(const TupleElement &element);
 std::string formatTuple(const Tuple &tuple);
 
-
 #endif //LINDA_LINDATUPLEUTILS_H
