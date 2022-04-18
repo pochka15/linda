@@ -48,9 +48,9 @@ TEST_CASE("can read and write from listeningChannel") {
 
     createChild("writer", sendData, [&service]() {
         createChild("reader", receiveData, [&service]() {
-//            Wait until all data is sent
-            sleep(1);
-            std::cout << "Closing channels" << std::endl;
+//            Wait for each child
+            int status;
+            while (wait(&status) > 0);
             bool isChannelClosed = service->closeChannel("Test");
             if (!isChannelClosed) {
                 FAIL("Couldn't close FIFO: ", strerror(errno));

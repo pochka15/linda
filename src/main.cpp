@@ -43,8 +43,9 @@ void runCoordinator() {
     coordinator->handleRequestBlocking();
     coordinator->handleRequestBlocking();
 
-//    Wait until all data is sent
-    sleep(1);
+//    Wait for each child
+    int status;
+    while (wait(&status) > 0);
     closeChannels(service);
 }
 
