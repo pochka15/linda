@@ -27,7 +27,7 @@ void receiveData() {
 TEST_CASE("listeningChannel is opened and closed without problems") {
     const auto &service = std::make_unique<CommunicationService>();
 
-    bool isChannelCreated = service->createChannel("Test");
+    bool isChannelCreated = service->openChannel("Test");
     if (!isChannelCreated) {
         FAIL("Couldn't create FIFO: ", strerror(errno));
     }
@@ -41,7 +41,7 @@ TEST_CASE("listeningChannel is opened and closed without problems") {
 TEST_CASE("can read and write from listeningChannel") {
     const auto &service = std::make_unique<CommunicationService>();
 
-    bool isChannelCreated = service->createChannel("Test");
+    bool isChannelCreated = service->openChannel("Test");
     if (!isChannelCreated) {
         FAIL("Couldn't create FIFO: ", strerror(errno));
     }

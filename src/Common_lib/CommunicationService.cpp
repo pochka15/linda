@@ -31,7 +31,7 @@ std::string CommunicationService::receiveBlocking(const std::string &channel) co
     return {buffer};
 }
 
-bool CommunicationService::createChannel(const std::string &channel) const {
+bool CommunicationService::openChannel(const std::string &channel) const {
     std::string path = FIFO_DIRECTORY + "/" + channel;
     int fifoResult = mkfifo(path.c_str(), S_IRUSR | S_IWUSR);
     return fifoResult != -1;

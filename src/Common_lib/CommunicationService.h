@@ -16,7 +16,7 @@ public:
 
     [[nodiscard]] std::string receiveBlocking(const std::string &channel) const;
 
-    [[nodiscard]] bool createChannel(const std::string &channel) const;
+    [[nodiscard]] bool openChannel(const std::string &channel) const;
 
     [[nodiscard]] bool closeChannel(const std::string &channel) const;
 

@@ -78,21 +78,21 @@ void openChannels(const std::unique_ptr<CommunicationService> &service) {
     const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
     const std::string READER_WRITER_CHANNEL = "Reader-Writer";
 
-    bool isChannelCreated = service->createChannel(WRITER_COORDINATOR_CHANNEL);
+    bool isChannelCreated = service->openChannel(WRITER_COORDINATOR_CHANNEL);
     if (!isChannelCreated) {
         std::cerr << "Couldn't create FIFO for the " << WRITER_COORDINATOR_CHANNEL
                   << " : " << strerror(errno) << std::endl;
         return;
     }
 
-    isChannelCreated = service->createChannel(READER_COORDINATOR_CHANNEL);
+    isChannelCreated = service->openChannel(READER_COORDINATOR_CHANNEL);
     if (!isChannelCreated) {
         std::cerr << "Couldn't create FIFO for the " << READER_COORDINATOR_CHANNEL
                   << " : " << strerror(errno) << std::endl;
         return;
     }
 
-    isChannelCreated = service->createChannel(READER_WRITER_CHANNEL);
+    isChannelCreated = service->openChannel(READER_WRITER_CHANNEL);
     if (!isChannelCreated) {
         std::cerr << "Couldn't create FIFO for the " << READER_WRITER_CHANNEL
                   << " : " << strerror(errno) << std::endl;
