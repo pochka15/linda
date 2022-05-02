@@ -2,7 +2,7 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 
 #include "doctest.h"
-#include "CommunicationService.h"
+#include "../Common_lib/CommunicationService.h"
 
 void createChild(const std::string &childName,
                  const std::function<void(void)> &childRunnable,

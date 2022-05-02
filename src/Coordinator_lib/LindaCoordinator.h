@@ -6,8 +6,8 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
-#include "LindaTupleUtils.h"
-#include "CommunicationService.h"
+#include "Common_lib/LindaTupleUtils.h"
+#include "Common_lib/CommunicationService.h"
 
 
 class LindaCoordinator {

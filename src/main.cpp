@@ -1,7 +1,7 @@
 #include <iostream>
 #include <unistd.h>
-#include "LindaCoordinator.h"
-#include "LindaAgent.h"
+#include "Coordinator_lib/LindaCoordinator.h"
+#include "Agent_lib/LindaAgent.h"
 #include "CommunicationService.h"
 
 void openChannels(const std::unique_ptr<CommunicationService> &service);

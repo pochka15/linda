@@ -2,8 +2,8 @@
 #define LINDA_LINDAAGENT_H
 
 
-#include "LindaTupleUtils.h"
-#include "CommunicationService.h"
+#include "Common_lib/LindaTupleUtils.h"
+#include "Common_lib/CommunicationService.h"
 
 class LindaAgent {
 public:
