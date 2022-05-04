@@ -2,13 +2,16 @@ prepare:
 	cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -B cmake-build-debug
 
 build:
-	cmake --build cmake-build-debug --target agents Doctest_tests_run coordinator
+	cmake --build cmake-build-debug --target agent Doctest_tests_run coordinator
 
-run_agents:
-	./cmake-build-debug/agents
+run_writer:
+	./cmake-build-debug/agent --writer
+
+run_reader:
+	./cmake-build-debug/agent --reader
 
 run_coordinator:
-	./cmake-build-debug/coordinator &
+	./cmake-build-debug/coordinator
 
 test:
 	./cmake-build-debug/src/Doctest_tests/Doctest_tests_run

@@ -1,18 +1,7 @@
 #include <iostream>
 #include <unistd.h>
-#include "Coordinator_lib/LindaCoordinator.h"
-#include "Agent_lib/LindaAgent.h"
+#include "LindaAgent.h"
 #include "CommunicationService.h"
-
-void createChild(const std::string &childName,
-                 const std::function<void(void)> &childRunnable,
-                 const std::function<void(void)> &parentRunnable) {
-    pid_t child = fork();
-    bool isChild = child == 0;
-    if (isChild) childRunnable();
-    else if (child == -1) std::cerr << "Couldn't create " << childName << "! " << strerror(errno) << std::endl;
-    else parentRunnable();
-}
 
 void runWriter() {
     const auto &service = std::make_unique<CommunicationService>();
@@ -31,7 +20,19 @@ void runReader() {
     std::cout << "Result: reader received pattern: " << data << std::endl;
 }
 
-int main() {
-    createChild("writer", runWriter, runReader);
+int main(int argc, char *argv[]) {
+    const char *writer = "--writer";
+    const char *reader = "--reader";
+
+    if (argc != 2) {
+        std::cout << "Please use " << writer << " or " << reader << " options" << '\n';
+        return 0;
+    }
+
+    char *parameter = argv[1];
+    bool isWriter = strcmp(parameter, writer) == 0;
+    if (isWriter) runWriter();
+    else runReader();
+
     return 0;
 }
