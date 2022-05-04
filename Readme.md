@@ -7,7 +7,7 @@
 ```sh
 sudo apt-get update
 sudo apt-get install cmake ninja-build
-sudo make prepare build run
+sudo make prepare build test
 ```
 
 ### Other systems
@@ -19,7 +19,7 @@ sudo make prepare build run
 3. Run Make command
 
     ```sh
-    sudo make prepare build test run
+    sudo make prepare build test
     ```
 
 ## Others
