@@ -2,7 +2,7 @@
 #pragma ide diagnostic ignored "cert-err58-cpp"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include "../Common_lib/LindaTupleUtils.h"
+#include "LindaTupleUtils.h"
 #include "doctest.h"
 
 TEST_CASE("test if tuple element is formatted correctly") {
