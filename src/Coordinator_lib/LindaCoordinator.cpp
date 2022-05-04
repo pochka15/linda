@@ -8,7 +8,7 @@ struct ReadRequest {
 };
 
 struct PublishRequest {
-    std::string tuple;
+    int tupleSize;
     std::string listeningChannel;
 };
 
@@ -29,7 +29,12 @@ PublishRequest parsePublishRequest(const std::string &data) {
     while (std::getline(stream, line)) {
         lines.push_back(line);
     }
-    return {lines[1], lines[2]};
+    int tupleSize = 0;
+    try {
+        tupleSize = std::stoi(lines[1]);
+    } catch (std::exception &ignored) {}
+    
+    return {tupleSize, lines[2]};
 }
 
 LindaCoordinator::LindaCoordinator(const CommunicationService &communicationService) :

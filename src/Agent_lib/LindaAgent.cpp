@@ -4,7 +4,7 @@
 
 std::string buildPublishRequest(const std::string &listeningChannel, const Tuple &tuple) {
     return std::string("Publish\n")
-           + formatTuple(tuple) + "\n"
+           + std::to_string(tuple.size()) + "\n"
            + listeningChannel;
 }
 
