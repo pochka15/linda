@@ -2,12 +2,17 @@
 
 #include <utility>
 
-std::string buildPublishRequest(const std::string &publisherChannel, const Tuple &tuple) {
-    return std::string("Publish\n") + formatTuple(tuple);
+std::string buildPublishRequest(const std::string &listeningChannel, const Tuple &tuple) {
+    return std::string("Publish\n")
+           + formatTuple(tuple) + "\n"
+           + listeningChannel;
 }
 
 std::string buildReadRequest(const std::string &listeningChannel, const std::string &pattern) {
-    return std::string("Read\n") + listeningChannel + "\n" + pattern;
+    return std::string("Read\n")
+           + pattern + "\n"
+           + listeningChannel;
+
 }
 
 LindaAgent::LindaAgent(std::string id, const CommunicationService &communicationService) :
@@ -17,19 +22,22 @@ LindaAgent::LindaAgent(std::string id, const CommunicationService &communication
 void LindaAgent::publishTupleBlocking(const Tuple &tuple) {
     cachedTuple = tuple;
     communicationService.sendBlocking(
-            buildPublishRequest(READER_COORDINATOR_CHANNEL, tuple),
+            buildPublishRequest(WRITER_COORDINATOR_CHANNEL, tuple),
             WRITER_COORDINATOR_CHANNEL);
 }
 
 std::string LindaAgent::readBlocking(const std::string &pattern) {
-    const std::string listeningChannel = READER_WRITER_CHANNEL;
-    communicationService.sendBlocking(buildReadRequest(listeningChannel, pattern),
-                                      READER_COORDINATOR_CHANNEL);
-    return communicationService.receiveBlocking(listeningChannel);
+    const std::string &channel = READER_COORDINATOR_CHANNEL;
+    communicationService.sendBlocking(buildReadRequest(channel, pattern), channel);
+    return communicationService.receiveBlocking(channel);
 }
 
+/**
+ * Handle all the requests from coordinator
+ */
 void LindaAgent::handleRequestBlocking() {
-//    It's assumed that coordinator just sends the listeningChannel to the writer
-    const std::string &targetChannel = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
-    communicationService.sendBlocking(formatTuple(cachedTuple), READER_WRITER_CHANNEL);
+//    For now, this function is only used by the writer. It just accepts any message from the coordinator
+//    and after that immediately sends the tuple
+    const std::string &pattern = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
+    communicationService.sendBlocking(formatTuple(cachedTuple), WRITER_COORDINATOR_CHANNEL);
 }

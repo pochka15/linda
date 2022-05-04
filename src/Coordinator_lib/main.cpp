@@ -60,11 +60,17 @@ int main() {
     openChannels(service);
 
     const auto &coordinator = std::make_unique<LindaCoordinator>(*service);
+
 //    It's assumed that coordinator will read request from the writer then from the reader
-    coordinator->handleRequestBlocking();
+
+//    Handle publish request from writer
     coordinator->handleRequestBlocking();
 
-    sleep(1);
+//    Handle read request from reader
+    coordinator->handleRequestBlocking();
+
+    coordinator->getTupleFromWriter();
+    coordinator->sendTuple();
     closeChannels(service);
     return 0;
 }

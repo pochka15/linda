@@ -3,14 +3,13 @@
 #include <utility>
 
 struct ReadRequest {
-    std::string action;
-    std::string listeningChannel;
     std::string pattern;
+    std::string listeningChannel;
 };
 
 struct PublishRequest {
-    std::string action;
     std::string tuple;
+    std::string listeningChannel;
 };
 
 ReadRequest parseReadRequest(const std::string &data) {
@@ -20,7 +19,7 @@ ReadRequest parseReadRequest(const std::string &data) {
     while (std::getline(stream, line)) {
         lines.push_back(line);
     }
-    return {lines[0], lines[1], lines[2]};
+    return {lines[1], lines[2]};
 }
 
 PublishRequest parsePublishRequest(const std::string &data) {
@@ -30,7 +29,7 @@ PublishRequest parsePublishRequest(const std::string &data) {
     while (std::getline(stream, line)) {
         lines.push_back(line);
     }
-    return {lines[0], lines[1]};
+    return {lines[1], lines[2]};
 }
 
 LindaCoordinator::LindaCoordinator(const CommunicationService &communicationService) :
@@ -45,7 +44,21 @@ void LindaCoordinator::handleRequestBlocking() {
     } else { // request from reader
         const std::string &data = communicationService.receiveBlocking(READER_COORDINATOR_CHANNEL);
         const ReadRequest &request = parseReadRequest(data);
-        communicationService.sendBlocking(request.listeningChannel, WRITER_COORDINATOR_CHANNEL);
+        communicationService.sendBlocking(request.pattern, WRITER_COORDINATOR_CHANNEL);
     }
+}
+
+/**
+ * Hot-fix method. Later it will be refactored
+ */
+void LindaCoordinator::getTupleFromWriter() {
+    rawReceivedTuple = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
+}
+
+/**
+ * Hot-fix method. Later it will be refactored
+ */
+ void LindaCoordinator::sendTuple() {
+    communicationService.sendBlocking(rawReceivedTuple, READER_COORDINATOR_CHANNEL);
 }
 
