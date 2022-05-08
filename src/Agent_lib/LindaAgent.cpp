@@ -2,9 +2,9 @@
 
 #include <utility>
 
-std::string buildPublishRequest(const std::string &listeningChannel, const Tuple &tuple) {
+std::string buildPublishRequest(const std::string &listeningChannel, unsigned long tupleSize) {
     return std::string("Publish\n")
-           + std::to_string(tuple.size()) + "\n"
+           + std::to_string(tupleSize) + "\n"
            + listeningChannel;
 }
 
@@ -22,7 +22,7 @@ LindaAgent::LindaAgent(std::string id, const CommunicationService &communication
 void LindaAgent::publishTupleBlocking(const Tuple &tuple) {
     cachedTuple = tuple;
     communicationService.sendBlocking(
-            buildPublishRequest(WRITER_COORDINATOR_CHANNEL, tuple),
+            buildPublishRequest(WRITER_COORDINATOR_CHANNEL, tuple.size()),
             WRITER_COORDINATOR_CHANNEL);
 }
 
