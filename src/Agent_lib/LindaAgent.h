@@ -16,6 +16,8 @@ public:
 
     std::string readBlocking(const std::string &pattern);
 
+    std::string executeScenario(const std::string &rawScenario);
+
 private:
     const CommunicationService &communicationService;
     const std::string WRITER_COORDINATOR_CHANNEL = "Writer-Coordinator";
