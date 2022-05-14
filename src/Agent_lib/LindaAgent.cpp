@@ -1,5 +1,6 @@
 #include "LindaAgent.h"
-
+#include "nlohmann/json.hpp"
+#include <iostream>
 #include <utility>
 
 std::string buildPublishRequest(const std::string &listeningChannel, unsigned long tupleSize) {
@@ -30,6 +31,28 @@ std::string LindaAgent::readBlocking(const std::string &pattern) {
     const std::string &channel = READER_COORDINATOR_CHANNEL;
     communicationService.sendBlocking(buildReadRequest(channel, pattern), channel);
     return communicationService.receiveBlocking(channel);
+}
+
+Tuple parseTuple(const nlohmann::basic_json<> &json) {
+    Tuple t;
+    for (const auto &it: json) {
+        if (it.is_number_float()) t.push_back(it.get<float>());
+        if (it.is_number_integer()) t.push_back(it.get<int>());
+        if (it.is_string()) t.push_back(it.get<std::string>());
+    }
+    return t;
+}
+
+std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) {
+    std::stringstream stream;
+    for (const auto &action: scenario["actions"]) {
+        if (action["name"] == "publishTuple") {
+            publishTupleBlocking(parseTuple(action["payload"]["tuple"]));
+        } else if (action["name"] == "readTuple") {
+            stream << readBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
+        }
+    }
+    return stream.str();
 }
 
 /**

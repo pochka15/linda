@@ -24,6 +24,12 @@ sudo make prepare build test
 
 ## Others
 
-- in order to run application you need to be a superuser. It's necessary for the communication via FIFO.
+- In order to run application you need to be a superuser. It's necessary for the communication via FIFO.
 - Pipes are stored at: /tmp. But you can edit it in the CommunicationService
-- testing framework: [doctest](https://github.com/doctest/doctest)
+- Testing framework: [doctest](https://github.com/doctest/doctest)
+
+### How to run an agent scenario
+
+- Create a json file under the root project directory e.x. `scenario.json`
+    - Json example: [Link](https://gist.github.com/pochka15/a4b759f58e4e5a66e26fec74d57bf633)
+- When running writer or reader set the parameter `--scenario scenario.json`
