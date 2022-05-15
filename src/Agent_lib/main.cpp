@@ -14,49 +14,49 @@ void runWriter() {
     agent->handleRequestBlocking();
 }
 
-void runReader(bool isOutput, char* outputFileName, bool isScenario, char* scenarioFileName) {
+void runReader(const char *outputFileName, const char *scenarioFileName) {
     const auto &service = std::make_unique<CommunicationService>();
     const auto &agent = std::make_unique<LindaAgent>(
             "Reader", *service);
+    std::string data;
 
-    if (isOutput && isScenario) {
-        const std::string &data = agent->executeScenario(scenarioFileName);
-
-        std::ofstream File(outputFileName);
-        File << data;
-        File.close();
-        return;
+    if (scenarioFileName == nullptr) {
+        data = agent->readBlocking("integer:>0, string:”Hello”, float:*");
+    } else {
+        data = agent->executeScenario(scenarioFileName);
     }
 
-    const std::string &data = agent->readBlocking("integer:>0, string:”Hello”, float:*");
-    std::cout << "Result: reader received pattern: " << data << std::endl;
+    if (outputFileName == nullptr) {
+        std::cout << "Result: reader received tuple: " << data << std::endl;
+    } else {
+        std::ofstream file(outputFileName);
+        file << "Result: reader received tuple: " << data;
+        file.close();
+    }
 }
 
 int main(int argc, char *argv[]) {
     const char *writer = "--writer";
-    const char *reader = "--reader";
     const char *output = "--output";
     const char *scenario = "--scenario";
 
-    bool isWriter = false, isOutput = false, isScenario = false;
-    char *outputFileName, *scenarioFileName;
+    bool isWriter = false;
+    char *outputFileName = nullptr, *scenarioFileName = nullptr;
 
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], writer) == 0) {
             isWriter = true;
         }
         else if (strcmp(argv[i], output) == 0) {
-            isOutput = true;
             outputFileName = argv[i + 1];
         }
         else if (strcmp(argv[i], scenario) == 0) {
-            isScenario = true;
             scenarioFileName = argv[i + 1];
         }
     }
 
     if (isWriter) runWriter();
-    else runReader(isOutput, outputFileName, isScenario, scenarioFileName);
+    else runReader(outputFileName, scenarioFileName);
 
     return 0;
 }
