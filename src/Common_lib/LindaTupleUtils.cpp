@@ -11,7 +11,7 @@ std::string joinTupleElements(const Tuple &tuple, const std::string &joinStr) {
 }
 
 std::string formatTuple(const Tuple &tuple) {
-    if (tuple.empty()) return "[Empty]";
+    if (tuple.empty()) return "[ ]";
     const std::string &joinedElements = joinTupleElements(tuple, ", ");
     std::stringstream stream;
     stream << "[" << joinedElements << "]";

@@ -16,7 +16,7 @@ TEST_CASE("test if tuple is formatted correctly") {
 
 TEST_CASE("test if empty tuple is formatted correctly") {
     const Tuple &tuple = Tuple();
-    CHECK(formatTuple(tuple) == "[Empty]");
+    CHECK(formatTuple(tuple) == "[ ]");
 }
 
 #pragma clang diagnostic pop
