@@ -34,26 +34,10 @@ std::string LindaAgent::readBlocking(const std::string &pattern) {
     return communicationService.receiveBlocking(channel);
 }
 
-std::string LindaAgent::executeScenario(const std::string &rawScenario) {
-
-    const auto &service = std::make_unique<CommunicationService>();
-    const auto &agent = std::make_unique<LindaAgent>(
-            "Reader", *service);
-
-    std::ifstream File(rawScenario);
-    std::stringstream buffer;
-
-    buffer << File.rdbuf();
-    auto json = nlohmann::json::parse(buffer.str());
-    auto jsonMetaData = json["actions"][0]["payload"]["tupleMetaData"];
-    auto jsonPattern = json["actions"][1]["payload"]["pattern"];
-
-    std::string metaData = jsonMetaData.dump();
-    std::string pattern = jsonPattern.dump();
-
-    //agent->publishTupleBlocking(metaData);  -- hasn't converted to Tuple type yet
-    const std::string &data = agent->readBlocking(pattern);
-    return pattern;
+std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) {
+    const std::string &pattern = scenario["actions"][0]["payload"]["pattern"].dump();
+//    TODO for each parsed action: exec action one by one
+    return readBlocking(pattern);
 }
 
 /**

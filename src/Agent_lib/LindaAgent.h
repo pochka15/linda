@@ -3,6 +3,7 @@
 
 #include "LindaTupleUtils.h"
 #include "CommunicationService.h"
+#include "nlohmann/json.hpp"
 
 class LindaAgent {
 public:
@@ -16,7 +17,7 @@ public:
 
     std::string readBlocking(const std::string &pattern);
 
-    std::string executeScenario(const std::string &rawScenario);
+    std::string executeScenario(const nlohmann::basic_json<> &scenario);
 
 private:
     const CommunicationService &communicationService;

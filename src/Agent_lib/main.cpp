@@ -4,6 +4,7 @@
 #include <fstream>
 #include "LindaAgent.h"
 #include "CommunicationService.h"
+#include "nlohmann/json.hpp"
 
 void runWriter() {
     const auto &service = std::make_unique<CommunicationService>();
@@ -14,22 +15,23 @@ void runWriter() {
     agent->handleRequestBlocking();
 }
 
-void runReader(const char *outputFileName, const char *scenarioFileName) {
+void runReader(const char *outputPath, const char *scenarioPath) {
     const auto &service = std::make_unique<CommunicationService>();
     const auto &agent = std::make_unique<LindaAgent>(
             "Reader", *service);
     std::string data;
 
-    if (scenarioFileName == nullptr) {
+    if (scenarioPath == nullptr) {
         data = agent->readBlocking("integer:>0, string:”Hello”, float:*");
     } else {
-        data = agent->executeScenario(scenarioFileName);
+        const auto &json = nlohmann::json::parse(std::ifstream(scenarioPath));
+        data = agent->executeScenario(json);
     }
 
-    if (outputFileName == nullptr) {
+    if (outputPath == nullptr) {
         std::cout << "Result: reader received tuple: " << data << std::endl;
     } else {
-        std::ofstream file(outputFileName);
+        std::ofstream file(outputPath);
         file << "Result: reader received tuple: " << data;
         file.close();
     }
@@ -46,11 +48,9 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], writer) == 0) {
             isWriter = true;
-        }
-        else if (strcmp(argv[i], output) == 0) {
+        } else if (strcmp(argv[i], output) == 0) {
             outputFileName = argv[i + 1];
-        }
-        else if (strcmp(argv[i], scenario) == 0) {
+        } else if (strcmp(argv[i], scenario) == 0) {
             scenarioFileName = argv[i + 1];
         }
     }
