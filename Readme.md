@@ -33,3 +33,4 @@ sudo make prepare build test
 - Create a json file under the root project directory e.x. `scenario.json`
     - Json example: [Link](https://gist.github.com/pochka15/a4b759f58e4e5a66e26fec74d57bf633)
 - When running writer or reader set the parameter `--scenario scenario.json`
+- Note: you can also provide with a full path to the scenario `--scenario /tmp/someScenario.json`
