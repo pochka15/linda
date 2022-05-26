@@ -19,4 +19,16 @@ TEST_CASE("test if empty tuple is formatted correctly") {
     CHECK(formatTuple(tuple) == "[ ]");
 }
 
+TEST_CASE("test pattern matching 1") {
+    const Tuple &tuple = Tuple{1, "Hello", 1.34f};
+    const char *pattern = "integer:>0, string:”Hello”, float:*";
+    CHECK(checkIfMatches(tuple, pattern));
+}
+
+TEST_CASE("test pattern matching 2") {
+    const Tuple &tuple = {};
+    const char *pattern = "integer:>0, string:”Hello”, float:*";
+    CHECK(!checkIfMatches(tuple, pattern));
+}
+
 #pragma clang diagnostic pop

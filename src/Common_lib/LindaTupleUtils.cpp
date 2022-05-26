@@ -23,3 +23,7 @@ std::string formatTupleElement(const TupleElement &element) {
     std::visit([&stream](auto &elem) { stream << elem; }, element);
     return stream.str();
 }
+
+bool checkIfMatches(const Tuple &tuple, const std::string &pattern) {
+    return false;
+}
