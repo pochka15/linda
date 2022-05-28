@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstring>
+#include <memory>
 #include "CommunicationService.h"
 #include "LindaCoordinator.h"
 

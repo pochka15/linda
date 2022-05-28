@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <variant>
 
 using TupleElement = std::variant<int, std::string, float>;
 using Tuple = std::vector<TupleElement>;
