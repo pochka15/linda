@@ -7,9 +7,9 @@
 
 class LindaAgent {
 public:
-    const std::string id;
+    const std::string privateChannel;
 
-    LindaAgent(std::string id, const CommunicationService &communicationService);
+    LindaAgent(std::string privateChannel, const CommunicationService &communicationService);
 
     void publishTupleBlocking(const Tuple &tuple);
 
@@ -21,13 +21,8 @@ public:
 
 private:
     const CommunicationService &communicationService;
-    const std::string WRITER_COORDINATOR_CHANNEL = "Writer-Coordinator";
-    const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
-    const std::string READER_WRITER_CHANNEL = "Reader-Writer";
+    const std::string COORDINATOR_CHANNEL = "Coordinator";
     Tuple cachedTuple = Tuple();
-
-    bool openChannel() const; // NOLINT(modernize-use-nodiscard)
-    bool closeChannel() const; // NOLINT(modernize-use-nodiscard)
 };
 
 

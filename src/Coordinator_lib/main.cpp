@@ -2,54 +2,24 @@
 #include "CommunicationService.h"
 #include "LindaCoordinator.h"
 
-void openChannels(const std::unique_ptr<CommunicationService> &service) {
-    const std::string WRITER_COORDINATOR_CHANNEL = "Writer-Coordinator";
-    const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
-    const std::string READER_WRITER_CHANNEL = "Reader-Writer";
+void openCoordinatorChannel(const std::unique_ptr<CommunicationService> &service) {
+    const std::string COORDINATOR_CHANNEL = "Coordinator";
 
-    bool isChannelCreated = service->openChannel(WRITER_COORDINATOR_CHANNEL);
+    bool isChannelCreated = service->openChannel(COORDINATOR_CHANNEL);
     if (!isChannelCreated) {
-        std::cerr << "Couldn't create FIFO for the " << WRITER_COORDINATOR_CHANNEL
-                  << " : " << strerror(errno) << std::endl;
-        return;
-    }
-
-    isChannelCreated = service->openChannel(READER_COORDINATOR_CHANNEL);
-    if (!isChannelCreated) {
-        std::cerr << "Couldn't create FIFO for the " << READER_COORDINATOR_CHANNEL
-                  << " : " << strerror(errno) << std::endl;
-        return;
-    }
-
-    isChannelCreated = service->openChannel(READER_WRITER_CHANNEL);
-    if (!isChannelCreated) {
-        std::cerr << "Couldn't create FIFO for the " << READER_WRITER_CHANNEL
+        std::cerr << "Couldn't create FIFO for the " << COORDINATOR_CHANNEL
                   << " : " << strerror(errno) << std::endl;
         return;
     }
 }
 
 
-void closeChannels(const std::unique_ptr<CommunicationService> &service) {
-    const std::string WRITER_COORDINATOR_CHANNEL = "Writer-Coordinator";
-    const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
-    const std::string READER_WRITER_CHANNEL = "Reader-Writer";
+void closeCoordinatorChannel(const std::unique_ptr<CommunicationService> &service) {
+    const std::string COORDINATOR_CHANNEL = "Coordinator";
 
-    bool isChannelClosed = service->closeChannel(WRITER_COORDINATOR_CHANNEL);
+    bool isChannelClosed = service->closeChannel(COORDINATOR_CHANNEL);
     if (!isChannelClosed) {
-        std::cerr << "Couldn't close FIFO for the " << WRITER_COORDINATOR_CHANNEL
-                  << " : " << strerror(errno) << std::endl;
-    }
-
-    isChannelClosed = service->closeChannel(READER_COORDINATOR_CHANNEL);
-    if (!isChannelClosed) {
-        std::cerr << "Couldn't close FIFO for the " << READER_COORDINATOR_CHANNEL
-                  << " : " << strerror(errno) << std::endl;
-    }
-
-    isChannelClosed = service->closeChannel(READER_WRITER_CHANNEL);
-    if (!isChannelClosed) {
-        std::cerr << "Couldn't close FIFO for the " << READER_WRITER_CHANNEL
+        std::cerr << "Couldn't close FIFO for the " << COORDINATOR_CHANNEL
                   << " : " << strerror(errno) << std::endl;
     }
 }
@@ -57,20 +27,11 @@ void closeChannels(const std::unique_ptr<CommunicationService> &service) {
 
 int main() {
     const auto &service = std::make_unique<CommunicationService>();
-    openChannels(service);
-
+    openCoordinatorChannel(service);
     const auto &coordinator = std::make_unique<LindaCoordinator>(*service);
-
-//    It's assumed that coordinator will read request from the writer then from the reader
-
-//    Handle publish request from writer
-    coordinator->handleRequestBlocking();
-
-//    Handle read request from reader
-    coordinator->handleRequestBlocking();
-
+    coordinator->handleRequests();
     coordinator->getTupleFromWriter();
     coordinator->sendTuple();
-    closeChannels(service);
+    closeCoordinatorChannel(service);
     return 0;
 }

@@ -16,25 +16,22 @@ std::string buildReadRequest(const std::string &listeningChannel, const std::str
 
 }
 
-LindaAgent::LindaAgent(std::string id, const CommunicationService &communicationService) :
-        id(std::move(id)),
+LindaAgent::LindaAgent(std::string privateChannel, const CommunicationService &communicationService) :
+        privateChannel(std::move(privateChannel)),
         communicationService(communicationService) {}
 
 void LindaAgent::publishTupleBlocking(const Tuple &tuple) {
     cachedTuple = tuple;
     communicationService.sendBlocking(
-            buildPublishRequest(WRITER_COORDINATOR_CHANNEL, tuple.size()),
-            WRITER_COORDINATOR_CHANNEL);
+            buildPublishRequest(privateChannel, tuple.size()),
+            COORDINATOR_CHANNEL);
 }
 
 std::string LindaAgent::readBlocking(const std::string &pattern) {
-    if (!openChannel()) return "";
-
-    const std::string &channel = READER_COORDINATOR_CHANNEL;
-    communicationService.sendBlocking(buildReadRequest(channel, pattern), channel);
-    const std::string &data = communicationService.receiveBlocking(channel);
-
-    closeChannel();
+    communicationService.sendBlocking(
+            buildReadRequest(privateChannel, pattern),
+            COORDINATOR_CHANNEL);
+    const std::string &data = communicationService.receiveBlocking(privateChannel);
     return data;
 }
 
@@ -66,23 +63,6 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
 void LindaAgent::handleRequestBlocking() {
 //    For now, this function is only used by the writer. It just accepts any message from the coordinator
 //    and after that immediately sends the tuple
-    const std::string &pattern = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
-    communicationService.sendBlocking(formatTuple(cachedTuple), WRITER_COORDINATOR_CHANNEL);
-}
-
-bool LindaAgent::openChannel() const {
-    bool isChannelCreated = communicationService.openChannel(id);
-    if (!isChannelCreated) {
-        std::cerr << "Couldn't create FIFO for the " << id << " : " << strerror(errno) << std::endl;
-    }
-    return isChannelCreated;
-}
-
-bool LindaAgent::closeChannel() const {
-    bool isChannelClosed = communicationService.closeChannel(id);
-    if (!isChannelClosed) {
-        std::cerr << "Couldn't close FIFO for the " << id
-                  << " : " << strerror(errno) << std::endl;
-    }
-    return isChannelClosed;
+    const std::string &pattern = communicationService.receiveBlocking(privateChannel);
+    communicationService.sendBlocking(formatTuple(cachedTuple), privateChannel);
 }

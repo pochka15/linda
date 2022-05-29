@@ -33,24 +33,30 @@ PublishRequest parsePublishRequest(const std::string &data) {
     try {
         tupleSize = std::stoi(lines[1]);
     } catch (std::exception &ignored) {}
-    
+
     return {tupleSize, lines[2]};
 }
 
 LindaCoordinator::LindaCoordinator(const CommunicationService &communicationService) :
         communicationService(communicationService) {}
 
-void LindaCoordinator::handleRequestBlocking() {
-    // Now we temporarily assume that requests firstly come from the writer then from reader
-    if (shouldHandleRequestsFromWriter) {
-        const std::string &data = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
-        auto request = parsePublishRequest(data);
-        shouldHandleRequestsFromWriter = false;
-    } else { // request from reader
-        const std::string &data = communicationService.receiveBlocking(READER_COORDINATOR_CHANNEL);
-        const ReadRequest &request = parseReadRequest(data);
-        cachedReaderChannel = request.listeningChannel;
-        communicationService.sendBlocking(request.pattern, WRITER_COORDINATOR_CHANNEL);
+void LindaCoordinator::handleRequests() {
+//    We temporarily handle only two requests
+    for (int i = 0; i < 2; ++i) {
+        const std::string &data = communicationService.receiveBlocking(COORDINATOR_CHANNEL);
+
+//        Publish request
+        if (data.rfind("Publish", 0) == 0) {
+            auto request = parsePublishRequest(data);
+            cachedWriterChannel = request.listeningChannel;
+        }
+
+//        Read request
+        else {
+            const ReadRequest &request = parseReadRequest(data);
+            cachedReaderChannel = request.listeningChannel;
+            communicationService.sendBlocking(request.pattern, cachedWriterChannel);
+        }
     }
 }
 
@@ -58,13 +64,13 @@ void LindaCoordinator::handleRequestBlocking() {
  * Hot-fix method. Later it will be refactored
  */
 void LindaCoordinator::getTupleFromWriter() {
-    rawReceivedTuple = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
+    rawReceivedTuple = communicationService.receiveBlocking(cachedWriterChannel);
 }
 
 /**
  * Hot-fix method. Later it will be refactored
  */
- void LindaCoordinator::sendTuple() {
+void LindaCoordinator::sendTuple() {
     communicationService.sendBlocking(rawReceivedTuple, cachedReaderChannel);
 }
 

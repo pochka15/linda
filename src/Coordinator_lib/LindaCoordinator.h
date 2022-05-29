@@ -14,7 +14,7 @@ class LindaCoordinator {
 public:
     explicit LindaCoordinator(const CommunicationService &communicationService);
 
-    void handleRequestBlocking();
+    void handleRequests();
 
     void getTupleFromWriter();
 
@@ -22,11 +22,10 @@ public:
 
 private:
     const CommunicationService &communicationService;
-    const std::string WRITER_COORDINATOR_CHANNEL = "Writer-Coordinator";
-    const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
-    bool shouldHandleRequestsFromWriter = true;
+    const std::string COORDINATOR_CHANNEL = "Coordinator";
     std::string rawReceivedTuple;
     std::string cachedReaderChannel;
+    std::string cachedWriterChannel;
 };
 
 #endif //LINDA_LINDACOORDINATOR_H

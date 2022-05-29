@@ -7,17 +7,41 @@
 #include "nlohmann/json.hpp"
 #include "RandomUtils.h"
 
-void runWriter(const std::string &id) {
+bool openChannel(const std::unique_ptr<CommunicationService> &service, const std::string &channel) {
+    bool isChannelCreated = service->openChannel(channel);
+    if (!isChannelCreated) {
+        std::cerr << "Couldn't create FIFO for the " << channel
+                  << " : " << strerror(errno) << std::endl;
+    }
+    return isChannelCreated;
+}
+
+void closeChannel(const std::unique_ptr<CommunicationService> &service, const std::string &channel) {
+    bool isChannelClosed = service->closeChannel(channel);
+    if (!isChannelClosed) {
+        std::cerr << "Couldn't close FIFO for the " << channel
+                  << " : " << strerror(errno) << std::endl;
+    }
+}
+
+
+void runWriter(const std::string &privateChannel) {
     const auto &service = std::make_unique<CommunicationService>();
-    const auto &agent = std::make_unique<LindaAgent>(id, *service);
+    if (!openChannel(service, privateChannel)) return;
+
+    const auto &agent = std::make_unique<LindaAgent>(privateChannel, *service);
     std::vector<TupleElement> tuple{1, "Hello", 3.14f};
     agent->publishTupleBlocking(tuple);
     agent->handleRequestBlocking();
+
+    closeChannel(service, privateChannel);
 }
 
-void runReader(const std::string &outputPath, const std::string &scenarioPath, const std::string &id) {
+void runReader(const std::string &outputPath, const std::string &scenarioPath, const std::string &privateChannel) {
     const auto &service = std::make_unique<CommunicationService>();
-    const auto &agent = std::make_unique<LindaAgent>(id, *service);
+    if (!openChannel(service, privateChannel)) return;
+
+    const auto &agent = std::make_unique<LindaAgent>(privateChannel, *service);
     std::string data;
 
     if (scenarioPath.empty()) {
@@ -34,6 +58,8 @@ void runReader(const std::string &outputPath, const std::string &scenarioPath, c
         file << data;
         file.close();
     }
+
+    closeChannel(service, privateChannel);
 }
 
 int main(int argc, char *argv[]) {
