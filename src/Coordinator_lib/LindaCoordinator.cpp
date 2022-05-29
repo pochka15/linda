@@ -2,6 +2,8 @@
 
 #include <utility>
 
+bool startsWith(const std::string &text, const char *prefix);
+
 struct ReadRequest {
     std::string pattern;
     std::string listeningChannel;
@@ -46,7 +48,7 @@ void LindaCoordinator::handleRequests() {
         const std::string &data = communicationService.receiveBlocking(COORDINATOR_CHANNEL);
 
 //        Publish request
-        if (data.rfind("Publish", 0) == 0) {
+        if (startsWith(data, "Publish")) {
             auto request = parsePublishRequest(data);
             cachedWriterChannel = request.listeningChannel;
         }
@@ -74,3 +76,6 @@ void LindaCoordinator::sendTuple() {
     communicationService.sendBlocking(rawReceivedTuple, cachedReaderChannel);
 }
 
+bool startsWith(const std::string &text, const char *prefix) {
+    return text.rfind(prefix, 0) == 0;
+}
