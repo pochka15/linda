@@ -28,9 +28,14 @@ void LindaAgent::publishTupleBlocking(const Tuple &tuple) {
 }
 
 std::string LindaAgent::readBlocking(const std::string &pattern) {
+    if (!openChannel()) return "";
+
     const std::string &channel = READER_COORDINATOR_CHANNEL;
     communicationService.sendBlocking(buildReadRequest(channel, pattern), channel);
-    return communicationService.receiveBlocking(channel);
+    const std::string &data = communicationService.receiveBlocking(channel);
+
+    closeChannel();
+    return data;
 }
 
 Tuple parseTuple(const nlohmann::basic_json<> &json) {
@@ -63,4 +68,21 @@ void LindaAgent::handleRequestBlocking() {
 //    and after that immediately sends the tuple
     const std::string &pattern = communicationService.receiveBlocking(WRITER_COORDINATOR_CHANNEL);
     communicationService.sendBlocking(formatTuple(cachedTuple), WRITER_COORDINATOR_CHANNEL);
+}
+
+bool LindaAgent::openChannel() const {
+    bool isChannelCreated = communicationService.openChannel(id);
+    if (!isChannelCreated) {
+        std::cerr << "Couldn't create FIFO for the " << id << " : " << strerror(errno) << std::endl;
+    }
+    return isChannelCreated;
+}
+
+bool LindaAgent::closeChannel() const {
+    bool isChannelClosed = communicationService.closeChannel(id);
+    if (!isChannelClosed) {
+        std::cerr << "Couldn't close FIFO for the " << id
+                  << " : " << strerror(errno) << std::endl;
+    }
+    return isChannelClosed;
 }

@@ -26,6 +26,7 @@ private:
     const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
     bool shouldHandleRequestsFromWriter = true;
     std::string rawReceivedTuple;
+    std::string cachedReaderChannel;
 };
 
 #endif //LINDA_LINDACOORDINATOR_H

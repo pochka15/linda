@@ -5,20 +5,19 @@
 #include "LindaAgent.h"
 #include "CommunicationService.h"
 #include "nlohmann/json.hpp"
+#include "RandomUtils.h"
 
-void runWriter() {
+void runWriter(const std::string &id) {
     const auto &service = std::make_unique<CommunicationService>();
-    const auto &agent = std::make_unique<LindaAgent>(
-            "Writer", *service);
+    const auto &agent = std::make_unique<LindaAgent>(id, *service);
     std::vector<TupleElement> tuple{1, "Hello", 3.14f};
     agent->publishTupleBlocking(tuple);
     agent->handleRequestBlocking();
 }
 
-void runReader(const std::string &outputPath, const std::string &scenarioPath) {
+void runReader(const std::string &outputPath, const std::string &scenarioPath, const std::string &id) {
     const auto &service = std::make_unique<CommunicationService>();
-    const auto &agent = std::make_unique<LindaAgent>(
-            "Reader", *service);
+    const auto &agent = std::make_unique<LindaAgent>(id, *service);
     std::string data;
 
     if (scenarioPath.empty()) {
@@ -56,8 +55,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (isWriter) runWriter();
-    else runReader(outputFileName, scenarioFileName);
+    if (isWriter) runWriter(std::string("Writer ") + getRandomId());
+    else runReader(outputFileName, scenarioFileName, "Reader " + getRandomId());
 
     return 0;
 }

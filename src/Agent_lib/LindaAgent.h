@@ -25,6 +25,9 @@ private:
     const std::string READER_COORDINATOR_CHANNEL = "Reader-Coordinator";
     const std::string READER_WRITER_CHANNEL = "Reader-Writer";
     Tuple cachedTuple = Tuple();
+
+    bool openChannel() const; // NOLINT(modernize-use-nodiscard)
+    bool closeChannel() const; // NOLINT(modernize-use-nodiscard)
 };
 
 

@@ -49,6 +49,7 @@ void LindaCoordinator::handleRequestBlocking() {
     } else { // request from reader
         const std::string &data = communicationService.receiveBlocking(READER_COORDINATOR_CHANNEL);
         const ReadRequest &request = parseReadRequest(data);
+        cachedReaderChannel = request.listeningChannel;
         communicationService.sendBlocking(request.pattern, WRITER_COORDINATOR_CHANNEL);
     }
 }
@@ -64,6 +65,6 @@ void LindaCoordinator::getTupleFromWriter() {
  * Hot-fix method. Later it will be refactored
  */
  void LindaCoordinator::sendTuple() {
-    communicationService.sendBlocking(rawReceivedTuple, READER_COORDINATOR_CHANNEL);
+    communicationService.sendBlocking(rawReceivedTuple, cachedReaderChannel);
 }
 
