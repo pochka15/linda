@@ -6,7 +6,7 @@
 
 ```sh
 sudo apt-get update
-sudo apt-get install cmake ninja-build
+sudo apt-get install cmake ninja-build libboost-all-dev
 sudo make prepare build test
 ```
 
@@ -16,7 +16,9 @@ sudo make prepare build test
 
 2. [Install Ninja](https://ninja-build.org)
 
-3. Run Make command
+3. Install boost
+
+4. Run Make command
 
     ```sh
     sudo make prepare build test

@@ -3,6 +3,12 @@ project(linda)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Boost
+        1.78.0 REQUIRED
+        COMPONENTS thread chrono)
+
+include_directories(${Boost_INCLUDE_DIRS})
+
 add_executable(agent src/Agent_lib/main.cpp)
 target_link_libraries(agent PUBLIC Agent_lib Common_lib Coordinator_lib)
 
