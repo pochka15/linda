@@ -43,8 +43,7 @@ LindaCoordinator::LindaCoordinator(const CommunicationService &communicationServ
         communicationService(communicationService) {}
 
 void LindaCoordinator::handleRequests() {
-//    We temporarily handle only two requests
-    for (int i = 0; i < 2; ++i) {
+    for (;;) {
         const std::string &data = communicationService.receiveBlocking(COORDINATOR_CHANNEL);
 
 //        Publish request
@@ -54,10 +53,18 @@ void LindaCoordinator::handleRequests() {
         }
 
 //        Read request
-        else {
+        else if (startsWith(data, "Read")) {
             const ReadRequest &request = parseReadRequest(data);
             cachedReaderChannel = request.listeningChannel;
-            communicationService.sendBlocking(request.pattern, cachedWriterChannel);
+            boost::thread t{[this, &request]() {
+                runScenario(request.pattern);
+            }};
+        }
+
+//        Terminate
+        else {
+            std::cout << "Terminating" << std::endl;
+            break;
         }
     }
 }
@@ -74,6 +81,18 @@ void LindaCoordinator::getTupleFromWriter() {
  */
 void LindaCoordinator::sendTuple() {
     communicationService.sendBlocking(rawReceivedTuple, cachedReaderChannel);
+}
+
+/**
+ * Hot-fix scenario. It's used in the reader request. It gets the tuple from the writer and sends it back to the reader
+ */
+void LindaCoordinator::runScenario(const std::string &pattern) {
+    communicationService.sendBlocking(pattern, cachedWriterChannel);
+    getTupleFromWriter();
+    sendTuple();
+
+//    Temporarily send terminate request to myself
+    communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
 }
 
 bool startsWith(const std::string &text, const char *prefix) {

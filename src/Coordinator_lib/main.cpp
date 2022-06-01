@@ -30,8 +30,6 @@ int main() {
     openCoordinatorChannel(service);
     const auto &coordinator = std::make_unique<LindaCoordinator>(*service);
     coordinator->handleRequests();
-    coordinator->getTupleFromWriter();
-    coordinator->sendTuple();
     closeCoordinatorChannel(service);
     return 0;
 }

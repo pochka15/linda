@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <boost/thread.hpp>
 #include "LindaTupleUtils.h"
 #include "CommunicationService.h"
 
@@ -26,6 +27,8 @@ private:
     std::string rawReceivedTuple;
     std::string cachedReaderChannel;
     std::string cachedWriterChannel;
+
+    void runScenario(const std::string &pattern);
 };
 
 #endif //LINDA_LINDACOORDINATOR_H
