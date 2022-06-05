@@ -7,13 +7,17 @@ bool startsWith(const std::string &text, const char *prefix);
 struct ReadRequest {
     std::string pattern;
     std::string listeningChannel;
+
+    [[nodiscard]] Reader toReader() const {
+        return {pattern, listeningChannel};
+    }
 };
 
 struct PublishRequest {
     int tupleSize;
     std::string listeningChannel;
 
-    PublisherMeta toMeta() {
+    [[nodiscard]] Publisher toPublisher() const {
         return {tupleSize, listeningChannel};
     }
 };
@@ -52,18 +56,18 @@ void LindaCoordinator::handleRequests() {
 
 //        Publish request
         if (startsWith(data, "Publish")) {
-            auto request = parsePublishRequest(data);
-            publishers.push_back(request.toMeta());
+            const PublishRequest &request = parsePublishRequest(data);
+            publishers.push_back(request.toPublisher());
+            std::thread(&LindaCoordinator::runPublisherScenario, this)
+                    .detach();
         }
 
 //        Read request
         else if (startsWith(data, "Read")) {
             const ReadRequest &request = parseReadRequest(data);
-            std::thread t(&LindaCoordinator::runScenario,
-                          this,
-                          request.pattern,
-                          request.listeningChannel);
-            t.detach();
+            readers.push_back(request.toReader());
+            std::thread(&LindaCoordinator::runReaderScenario, this)
+                    .detach();
         }
 
 //        Terminate
@@ -74,16 +78,24 @@ void LindaCoordinator::handleRequests() {
     }
 }
 
+
 /**
- * Hot-fix scenario. It's used in the reader request. It gets the tuple from the publisher and sends it back to the reader
+ * Hot-fix scenario. It's used in the reader request.
+ * It gets a tuple from the publisher and sends it back to the reader
  */
-void LindaCoordinator::runScenario(const std::string &pattern, const std::string &readerChannel) {
-    communicationService.sendBlocking(pattern, publishers[0].listeningChannel);
+void LindaCoordinator::runReaderScenario() {
+    if (publishers.empty()) return;
+
+    communicationService.sendBlocking(readers[0].pattern, publishers[0].listeningChannel);
     const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
-    communicationService.sendBlocking(tuple, readerChannel);
+    communicationService.sendBlocking(tuple, readers[0].listeningChannel);
 
 //    Temporarily send terminate request to myself
     communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
+}
+
+void LindaCoordinator::runPublisherScenario() {
+    if (!readers.empty()) runReaderScenario();
 }
 
 bool startsWith(const std::string &text, const char *prefix) {

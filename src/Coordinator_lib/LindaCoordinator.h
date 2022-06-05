@@ -11,8 +11,13 @@
 #include "CommunicationService.h"
 
 
-struct PublisherMeta {
+struct Publisher {
     int tupleSize;
+    std::string listeningChannel;
+};
+
+struct Reader {
+    std::string pattern;
     std::string listeningChannel;
 };
 
@@ -25,9 +30,12 @@ public:
 private:
     const CommunicationService &communicationService;
     const std::string COORDINATOR_CHANNEL = "Coordinator";
-    std::vector<PublisherMeta> publishers;
+    std::vector<Publisher> publishers;
+    std::vector<Reader> readers;
 
-    void runScenario(const std::string &pattern, const std::string &readerChannel);
+    void runReaderScenario();
+
+    void runPublisherScenario();
 };
 
 #endif //LINDA_LINDACOORDINATOR_H
