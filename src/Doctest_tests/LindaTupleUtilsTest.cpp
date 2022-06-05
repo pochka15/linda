@@ -29,8 +29,13 @@ TEST_CASE("test pattern matching 1") {
 
 TEST_CASE("test pattern matching 2") {
     const Tuple &tuple = {};
-    const char *pattern = "integer:>0, string:”Hello”, float:*";
+    const char *pattern = "integer:>0, string:\"Hello\", float:*";
     CHECK(!checkIfMatches(tuple, pattern));
+}
+
+TEST_CASE("test negative integer") {
+    const char *pattern = "integer:<0";
+    CHECK(!checkIfMatches({1}, pattern));
 }
 
 #pragma clang diagnostic pop
