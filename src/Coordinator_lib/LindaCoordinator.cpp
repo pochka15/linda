@@ -59,10 +59,11 @@ void LindaCoordinator::handleRequests() {
 //        Read request
         else if (startsWith(data, "Read")) {
             const ReadRequest &request = parseReadRequest(data);
-            boost::thread t2(&LindaCoordinator::runScenario,
-                             this,
-                             request.pattern,
-                             request.listeningChannel);
+            std::thread t(&LindaCoordinator::runScenario,
+                          this,
+                          request.pattern,
+                          request.listeningChannel);
+            t.detach();
         }
 
 //        Terminate

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
-#include <boost/thread.hpp>
+#include <thread>
 #include "LindaTupleUtils.h"
 #include "CommunicationService.h"
 
