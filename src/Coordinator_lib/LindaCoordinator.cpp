@@ -12,14 +12,6 @@ struct ReadRequest {
     }
 };
 
-std::string buildReadRequest(const std::string &listeningChannel, const std::string &pattern) {
-    return {"Read\n"};
-}
-
-std::string buildVipReadRequest(const std::string &listeningChannel, const std::string &pattern) {
-    return {"Read VIP\n"};
-}
-
 struct PublishRequest {
     int tupleSize;
     std::string listeningChannel;
@@ -85,7 +77,7 @@ void LindaCoordinator::handleRequests() {
             channelToReader[request.listeningChannel] = reader;
             collectionsMutex.unlock();
 
-            std::thread(&LindaCoordinator::runReadScenario, this)
+            std::thread(&LindaCoordinator::runReadScenario, this, reader)
                     .detach();
         }
 
@@ -97,36 +89,75 @@ void LindaCoordinator::handleRequests() {
     }
 }
 
+/**
+ * Find publisher that is ready to send tuple that matches given pattern
+ * @param pattern
+ * @return found publisher or an empty structure
+ */
+Publisher LindaCoordinator::getPublisherByPattern(const std::string &pattern) {
+    auto publisher_iter = std::find_if(
+            publishers.begin(),
+            publishers.end(),
+            [this, &pattern](const Publisher &publisher) {
+                communicationService.sendBlocking("Match\n" + pattern, publisher.listeningChannel);
+                return communicationService.receiveBlocking(publisher.listeningChannel) == "OK";
+            });
+    if (publisher_iter == std::end(publishers)) return {};
+    return *publisher_iter;
+}
+
+void LindaCoordinator::erasePublisherByChannel(const std::string &channel) {
+    publishers.erase(std::remove_if(
+                             publishers.begin(),
+                             publishers.end(),
+                             [&channel](Publisher &p) {
+                                 return p.listeningChannel == channel;
+                             }),
+                     publishers.end());
+}
+
+std::vector<Reader> LindaCoordinator::getReadersCopy() {
+    std::vector<Reader> readers;
+    for (const auto &pair: channelToReader) {
+        const Reader &reader = pair.second;
+        readers.push_back({reader.pattern,
+                           reader.listeningChannel,
+                           reader.isVip});
+    }
+    return readers;
+}
+
 
 /**
  * Get a tuple from the publisher and send it back to the reader
  */
-void LindaCoordinator::runReadScenario() {
-//    Check if publisher exists
+void LindaCoordinator::runReadScenario(const Reader &reader) {
+//    Check if at list one publisher exists
     collectionsMutex.lock();
     bool noPublishers = publishers.empty();
     collectionsMutex.unlock();
     if (noPublishers) return;
 
-//    Get tuple from publisher -> send to the reader
+//    Find matching publisher
     const std::lock_guard<std::mutex> lock(scenariosMutex);
-    Reader &reader = channelToReader.begin()->second;
-    communicationService.sendBlocking(
-            reader.isVip ? "Read VIP" : "Read",
-            publishers[0].listeningChannel);
-    const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
+    Publisher publisher = getPublisherByPattern(reader.pattern);
+    if (publisher.listeningChannel.empty()) return;
+
+//    Get tuple from publisher -> send it to the reader
+    communicationService.sendBlocking(reader.isVip ? "Read VIP" : "Read", publisher.listeningChannel);
+    const std::string &tuple = communicationService.receiveBlocking(publisher.listeningChannel);
     communicationService.sendBlocking(tuple, reader.listeningChannel);
 
 //    Run cleanup logic
     collectionsMutex.lock();
-    if (reader.isVip) publishers.clear();
-    channelToReader.clear();
+    if (reader.isVip) erasePublisherByChannel(publisher.listeningChannel);
+    channelToReader.erase(reader.listeningChannel);
     collectionsMutex.unlock();
 }
 
 void LindaCoordinator::runPublishScenario() {
     collectionsMutex.lock();
-    bool readerExists = !channelToReader.empty();
+    std::vector<Reader> readers = getReadersCopy();
     collectionsMutex.unlock();
-    if (readerExists) runReadScenario();
+    for (const auto &reader: readers) runReadScenario(reader);
 }

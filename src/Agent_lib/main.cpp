@@ -25,14 +25,20 @@ void closeChannel(const std::unique_ptr<CommunicationService> &service, const st
 }
 
 
-void runWriter(const std::string &privateChannel) {
+void runWriter(const std::string &scenarioPath, const std::string &privateChannel) {
     const auto &service = std::make_unique<CommunicationService>();
     if (!openChannel(service, privateChannel)) return;
 
     const auto &agent = std::make_unique<LindaAgent>(privateChannel, *service);
-    std::vector<TupleElement> tuple{1, "Hello", 3.14f};
-    agent->publishTupleBlocking(tuple);
-    agent->handleRequestsBlocking();
+
+    if (scenarioPath.empty()) {
+        std::vector<TupleElement> tuple{1, "Hello", 3.14f};
+        agent->publishTupleBlocking(tuple);
+        agent->handleRequestsBlocking();
+    } else {
+        const auto &json = nlohmann::json::parse(std::ifstream(scenarioPath));
+        agent->executeScenario(json);
+    }
 
     closeChannel(service, privateChannel);
 }
@@ -45,7 +51,7 @@ void runReader(const std::string &outputPath, const std::string &scenarioPath, c
     std::string data;
 
     if (scenarioPath.empty()) {
-        data = agent->readBlocking("integer:>0, string:”Hello”, float:*");
+        data = agent->readBlocking("integer:>0, string:\"Hello\", float:*");
     } else {
         const auto &json = nlohmann::json::parse(std::ifstream(scenarioPath));
         data = agent->executeScenario(json);
@@ -81,7 +87,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (isWriter) runWriter(std::string("Writer ") + getRandomId());
+    if (isWriter) runWriter(scenarioFileName, std::string("Writer ") + getRandomId());
     else runReader(outputFileName, scenarioFileName, "Reader " + getRandomId());
 
     return 0;

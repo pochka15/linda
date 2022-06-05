@@ -9,6 +9,10 @@ struct ReadRequest {
     bool isVip;
 };
 
+struct MatchRequest {
+    std::string pattern;
+};
+
 ReadRequest parseReadRequest(const std::string &data, bool isVip) {
     std::vector<std::string> lines;
     std::istringstream stream(data);
@@ -17,6 +21,16 @@ ReadRequest parseReadRequest(const std::string &data, bool isVip) {
         lines.push_back(line);
     }
     return {lines[1], lines[2], isVip};
+}
+
+MatchRequest parseMatchRequest(const std::string &data) {
+    std::vector<std::string> lines;
+    std::istringstream stream(data);
+    std::string line;
+    while (std::getline(stream, line)) {
+        lines.push_back(line);
+    }
+    return {lines[1]};
 }
 
 std::string buildPublishRequest(const std::string &listeningChannel, unsigned long tupleSize) {
@@ -84,6 +98,8 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
             stream << readBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
         } else if (action["name"] == "readTupleVip") {
             stream << readVipBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
+        } else if (action["name"] == "handleRequests") {
+            handleRequestsBlocking();
         }
     }
     return stream.str();
@@ -95,9 +111,15 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
 void LindaAgent::handleRequestsBlocking() {
     for (;;) {
         const std::string &data = communicationService.receiveBlocking(privateChannel);
-        bool isVip = startsWith(data, "Read VIP");
-        const ReadRequest &request = parseReadRequest(data, isVip);
-        communicationService.sendBlocking(formatTuple(cachedTuple), privateChannel);
-        if (isVip) break;
+        if (startsWith(data, "Read")) {
+            bool isVip = startsWith(data, "Read VIP");
+            const ReadRequest &request = parseReadRequest(data, isVip);
+            communicationService.sendBlocking(formatTuple(cachedTuple), privateChannel);
+            if (isVip) break;
+        } else if (startsWith(data, "Match")) {
+            const MatchRequest &request = parseMatchRequest(data);
+            bool matches = checkIfMatches(cachedTuple, request.pattern);
+            communicationService.sendBlocking(matches ? "OK" : "Bad", privateChannel);
+        }
     }
 }

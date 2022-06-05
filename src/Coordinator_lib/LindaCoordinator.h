@@ -39,9 +39,15 @@ private:
     std::mutex collectionsMutex;
     std::mutex scenariosMutex;
 
-    void runReadScenario();
+    void runReadScenario(const Reader &reader);
 
     void runPublishScenario();
+
+    Publisher getPublisherByPattern(const std::string &pattern);
+
+    void erasePublisherByChannel(const std::string &channel);
+
+    std::vector<Reader> getReadersCopy();
 };
 
 #endif //LINDA_LINDACOORDINATOR_H
