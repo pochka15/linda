@@ -1,6 +1,10 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cert-err58-cpp"
 
+#include <functional>
+#include <memory>
+#include <cstring>
+#include <sys/wait.h>
 #include "doctest.h"
 #include "CommunicationService.h"
 #include <thread>
