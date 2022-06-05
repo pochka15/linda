@@ -2,16 +2,23 @@
 
 #include <utility>
 
-bool startsWith(const std::string &text, const char *prefix);
-
 struct ReadRequest {
     std::string pattern;
     std::string listeningChannel;
+    bool isVip;
 
     [[nodiscard]] Reader toReader() const {
-        return {pattern, listeningChannel};
+        return {pattern, listeningChannel, isVip};
     }
 };
+
+std::string buildReadRequest(const std::string &listeningChannel, const std::string &pattern) {
+    return {"Read\n"};
+}
+
+std::string buildVipReadRequest(const std::string &listeningChannel, const std::string &pattern) {
+    return {"Read VIP\n"};
+}
 
 struct PublishRequest {
     int tupleSize;
@@ -22,14 +29,14 @@ struct PublishRequest {
     }
 };
 
-ReadRequest parseReadRequest(const std::string &data) {
+ReadRequest parseReadRequest(const std::string &data, bool isVip) {
     std::vector<std::string> lines;
     std::istringstream stream(data);
     std::string line;
     while (std::getline(stream, line)) {
         lines.push_back(line);
     }
-    return {lines[1], lines[2]};
+    return {lines[1], lines[2], isVip};
 }
 
 PublishRequest parsePublishRequest(const std::string &data) {
@@ -62,16 +69,18 @@ void LindaCoordinator::handleRequests() {
                     .detach();
         }
 
-//        Read request
+//        Read and 'Read VIP' requests
         else if (startsWith(data, "Read")) {
-            const ReadRequest &request = parseReadRequest(data);
-            readers.push_back(request.toReader());
+            const ReadRequest &request = parseReadRequest(
+                    data,
+                    startsWith(data, "Read VIP"));
+            channelToReader[request.listeningChannel] = request.toReader();
             std::thread(&LindaCoordinator::runReadScenario, this)
                     .detach();
         }
 
 //        Terminate
-        else {
+        else if (startsWith(data, "Terminate")) {
             std::cout << "Terminating" << std::endl;
             break;
         }
@@ -80,24 +89,24 @@ void LindaCoordinator::handleRequests() {
 
 
 /**
- * Hot-fix scenario. It's used in the reader request.
- * It gets a tuple from the publisher and sends it back to the reader
+ * Get a tuple from the publisher and send it back to the reader
  */
 void LindaCoordinator::runReadScenario() {
     if (publishers.empty()) return;
 
-    communicationService.sendBlocking(readers[0].pattern, publishers[0].listeningChannel);
-    const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
-    communicationService.sendBlocking(tuple, readers[0].listeningChannel);
+    Reader &reader = channelToReader.begin()->second;
 
-//    Temporarily send terminate request to myself
-    communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
+    communicationService.sendBlocking(
+            reader.isVip ? "Read VIP" : "Read",
+            publishers[0].listeningChannel);
+
+    const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
+    communicationService.sendBlocking(tuple, reader.listeningChannel);
+
+    if (reader.isVip) publishers.clear();
+    channelToReader.clear();
 }
 
 void LindaCoordinator::runPublishScenario() {
-    if (!readers.empty()) runReadScenario();
-}
-
-bool startsWith(const std::string &text, const char *prefix) {
-    return text.rfind(prefix, 0) == 0;
+    if (!channelToReader.empty()) runReadScenario();
 }

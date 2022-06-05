@@ -3,6 +3,22 @@
 #include <iostream>
 #include <utility>
 
+struct ReadRequest {
+    std::string pattern;
+    std::string listeningChannel;
+    bool isVip;
+};
+
+ReadRequest parseReadRequest(const std::string &data, bool isVip) {
+    std::vector<std::string> lines;
+    std::istringstream stream(data);
+    std::string line;
+    while (std::getline(stream, line)) {
+        lines.push_back(line);
+    }
+    return {lines[1], lines[2], isVip};
+}
+
 std::string buildPublishRequest(const std::string &listeningChannel, unsigned long tupleSize) {
     return std::string("Publish\n")
            + std::to_string(tupleSize) + "\n"
@@ -13,7 +29,12 @@ std::string buildReadRequest(const std::string &listeningChannel, const std::str
     return std::string("Read\n")
            + pattern + "\n"
            + listeningChannel;
+}
 
+std::string buildVipReadRequest(const std::string &listeningChannel, const std::string &pattern) {
+    return std::string("Read VIP\n")
+           + pattern + "\n"
+           + listeningChannel;
 }
 
 LindaAgent::LindaAgent(std::string privateChannel, const CommunicationService &communicationService) :
@@ -35,6 +56,15 @@ std::string LindaAgent::readBlocking(const std::string &pattern) {
     return data;
 }
 
+std::string LindaAgent::readVipBlocking(const std::string &pattern) {
+    communicationService.sendBlocking(
+            buildVipReadRequest(privateChannel, pattern),
+            COORDINATOR_CHANNEL);
+    const std::string &data = communicationService.receiveBlocking(privateChannel);
+    return data;
+}
+
+
 Tuple parseTuple(const nlohmann::basic_json<> &json) {
     Tuple t;
     for (const auto &it: json) {
@@ -52,6 +82,8 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
             publishTupleBlocking(parseTuple(action["payload"]["tuple"]));
         } else if (action["name"] == "readTuple") {
             stream << readBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
+        } else if (action["name"] == "readTupleVip") {
+            stream << readVipBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
         }
     }
     return stream.str();
@@ -60,9 +92,12 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
 /**
  * Handle all the requests from coordinator
  */
-void LindaAgent::handleRequestBlocking() {
-//    For now, this function is only used by the writer. It just accepts any message from the coordinator
-//    and after that immediately sends the tuple
-    const std::string &pattern = communicationService.receiveBlocking(privateChannel);
-    communicationService.sendBlocking(formatTuple(cachedTuple), privateChannel);
+void LindaAgent::handleRequestsBlocking() {
+    for (;;) {
+        const std::string &data = communicationService.receiveBlocking(privateChannel);
+        bool isVip = startsWith(data, "Read VIP");
+        const ReadRequest &request = parseReadRequest(data, isVip);
+        communicationService.sendBlocking(formatTuple(cachedTuple), privateChannel);
+        if (isVip) break;
+    }
 }

@@ -7,8 +7,10 @@
 #include <numeric>
 #include <sstream>
 #include <thread>
+#include <map>
 #include "LindaTupleUtils.h"
 #include "CommunicationService.h"
+#include "StringUtils.h"
 
 
 struct Publisher {
@@ -19,6 +21,7 @@ struct Publisher {
 struct Reader {
     std::string pattern;
     std::string listeningChannel;
+    bool isVip;
 };
 
 class LindaCoordinator {
@@ -31,7 +34,7 @@ private:
     const CommunicationService &communicationService;
     const std::string COORDINATOR_CHANNEL = "Coordinator";
     std::vector<Publisher> publishers;
-    std::vector<Reader> readers;
+    std::map<std::string, Reader> channelToReader;
 
     void runReadScenario();
 

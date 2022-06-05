@@ -32,7 +32,7 @@ void runWriter(const std::string &privateChannel) {
     const auto &agent = std::make_unique<LindaAgent>(privateChannel, *service);
     std::vector<TupleElement> tuple{1, "Hello", 3.14f};
     agent->publishTupleBlocking(tuple);
-    agent->handleRequestBlocking();
+    agent->handleRequestsBlocking();
 
     closeChannel(service, privateChannel);
 }
