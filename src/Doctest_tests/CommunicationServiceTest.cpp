@@ -3,16 +3,7 @@
 
 #include "doctest.h"
 #include "CommunicationService.h"
-
-void createChild(const std::string &childName,
-                 const std::function<void(void)> &childRunnable,
-                 const std::function<void(void)> &parentRunnable) {
-    pid_t child = fork();
-    bool isChild = child == 0;
-    if (isChild) childRunnable();
-    else if (child == -1) std::cerr << "Couldn't create " << childName << "! " << strerror(errno) << std::endl;
-    else parentRunnable();
-}
+#include <thread>
 
 void sendData() {
     const auto &service = std::make_unique<CommunicationService>();
@@ -46,17 +37,13 @@ TEST_CASE("can read and write from listeningChannel") {
         FAIL("Couldn't create FIFO: ", strerror(errno));
     }
 
-    createChild("writer", sendData, [&service]() {
-        createChild("reader", receiveData, [&service]() {
-//            Wait for each child
-            int status;
-            while (wait(&status) > 0);
-            bool isChannelClosed = service->closeChannel("Test");
-            if (!isChannelClosed) {
-                FAIL("Couldn't close FIFO: ", strerror(errno));
-            }
-        });
-    });
+    std::thread(sendData).detach();
+    receiveData();
+
+    bool isChannelClosed = service->closeChannel("Test");
+    if (!isChannelClosed) {
+        FAIL("Couldn't close FIFO: ", strerror(errno));
+    }
 }
 
 
