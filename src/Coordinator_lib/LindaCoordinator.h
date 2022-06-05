@@ -33,9 +33,9 @@ private:
     std::vector<Publisher> publishers;
     std::vector<Reader> readers;
 
-    void runReaderScenario();
+    void runReadScenario();
 
-    void runPublisherScenario();
+    void runPublishScenario();
 };
 
 #endif //LINDA_LINDACOORDINATOR_H

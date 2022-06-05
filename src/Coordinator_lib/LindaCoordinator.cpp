@@ -58,7 +58,7 @@ void LindaCoordinator::handleRequests() {
         if (startsWith(data, "Publish")) {
             const PublishRequest &request = parsePublishRequest(data);
             publishers.push_back(request.toPublisher());
-            std::thread(&LindaCoordinator::runPublisherScenario, this)
+            std::thread(&LindaCoordinator::runPublishScenario, this)
                     .detach();
         }
 
@@ -66,7 +66,7 @@ void LindaCoordinator::handleRequests() {
         else if (startsWith(data, "Read")) {
             const ReadRequest &request = parseReadRequest(data);
             readers.push_back(request.toReader());
-            std::thread(&LindaCoordinator::runReaderScenario, this)
+            std::thread(&LindaCoordinator::runReadScenario, this)
                     .detach();
         }
 
@@ -83,7 +83,7 @@ void LindaCoordinator::handleRequests() {
  * Hot-fix scenario. It's used in the reader request.
  * It gets a tuple from the publisher and sends it back to the reader
  */
-void LindaCoordinator::runReaderScenario() {
+void LindaCoordinator::runReadScenario() {
     if (publishers.empty()) return;
 
     communicationService.sendBlocking(readers[0].pattern, publishers[0].listeningChannel);
@@ -94,8 +94,8 @@ void LindaCoordinator::runReaderScenario() {
     communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
 }
 
-void LindaCoordinator::runPublisherScenario() {
-    if (!readers.empty()) runReaderScenario();
+void LindaCoordinator::runPublishScenario() {
+    if (!readers.empty()) runReadScenario();
 }
 
 bool startsWith(const std::string &text, const char *prefix) {
