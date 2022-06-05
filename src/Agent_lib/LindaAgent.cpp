@@ -5,7 +5,7 @@
 
 struct ReadRequest {
     std::string pattern;
-    std::string listeningChannel;
+    std::string channel;
     bool isVip;
 };
 
@@ -14,41 +14,31 @@ struct MatchRequest {
 };
 
 ReadRequest parseReadRequest(const std::string &data, bool isVip) {
-    std::vector<std::string> lines;
-    std::istringstream stream(data);
-    std::string line;
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
+    std::vector<std::string> lines = readLines(data);
     return {lines[1], lines[2], isVip};
 }
 
 MatchRequest parseMatchRequest(const std::string &data) {
-    std::vector<std::string> lines;
-    std::istringstream stream(data);
-    std::string line;
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
+    std::vector<std::string> lines = readLines(data);
     return {lines[1]};
 }
 
-std::string buildPublishRequest(const std::string &listeningChannel, unsigned long tupleSize) {
+std::string buildPublishRequest(const std::string &channel, unsigned long tupleSize) {
     return std::string("Publish\n")
            + std::to_string(tupleSize) + "\n"
-           + listeningChannel;
+           + channel;
 }
 
-std::string buildReadRequest(const std::string &listeningChannel, const std::string &pattern) {
+std::string buildReadRequest(const std::string &channel, const std::string &pattern) {
     return std::string("Read\n")
            + pattern + "\n"
-           + listeningChannel;
+           + channel;
 }
 
-std::string buildVipReadRequest(const std::string &listeningChannel, const std::string &pattern) {
+std::string buildVipReadRequest(const std::string &channel, const std::string &pattern) {
     return std::string("Read VIP\n")
            + pattern + "\n"
-           + listeningChannel;
+           + channel;
 }
 
 LindaAgent::LindaAgent(std::string privateChannel, const CommunicationService &communicationService) :

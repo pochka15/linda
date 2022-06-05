@@ -16,12 +16,12 @@
 
 struct Publisher {
     int tupleSize;
-    std::string listeningChannel;
+    std::string channel;
 };
 
 struct Reader {
     std::string pattern;
-    std::string listeningChannel;
+    std::string channel;
     bool isVip;
 };
 

@@ -4,40 +4,30 @@
 
 struct ReadRequest {
     std::string pattern;
-    std::string listeningChannel;
+    std::string channel;
     bool isVip;
 
     [[nodiscard]] Reader toReader() const {
-        return {pattern, listeningChannel, isVip};
+        return {pattern, channel, isVip};
     }
 };
 
 struct PublishRequest {
     int tupleSize;
-    std::string listeningChannel;
+    std::string channel;
 
     [[nodiscard]] Publisher toPublisher() const {
-        return {tupleSize, listeningChannel};
+        return {tupleSize, channel};
     }
 };
 
 ReadRequest parseReadRequest(const std::string &data, bool isVip) {
-    std::vector<std::string> lines;
-    std::istringstream stream(data);
-    std::string line;
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
+    std::vector<std::string> lines = readLines(data);
     return {lines[1], lines[2], isVip};
 }
 
 PublishRequest parsePublishRequest(const std::string &data) {
-    std::vector<std::string> lines;
-    std::istringstream stream(data);
-    std::string line;
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
+    std::vector<std::string> lines = readLines(data);
     int tupleSize = 0;
     try {
         tupleSize = std::stoi(lines[1]);
@@ -74,7 +64,7 @@ void LindaCoordinator::handleRequests() {
             const Reader &reader = request.toReader();
 
             collectionsMutex.lock();
-            channelToReader[request.listeningChannel] = reader;
+            channelToReader[request.channel] = reader;
             collectionsMutex.unlock();
 
             std::thread(&LindaCoordinator::runReadScenario, this, reader)
@@ -99,8 +89,8 @@ Publisher LindaCoordinator::getPublisherByPattern(const std::string &pattern) {
             publishers.begin(),
             publishers.end(),
             [this, &pattern](const Publisher &publisher) {
-                communicationService.sendBlocking("Match\n" + pattern, publisher.listeningChannel);
-                return communicationService.receiveBlocking(publisher.listeningChannel) == "OK";
+                communicationService.sendBlocking("Match\n" + pattern, publisher.channel);
+                return communicationService.receiveBlocking(publisher.channel) == "OK";
             });
     if (publisher_iter == std::end(publishers)) return {};
     return *publisher_iter;
@@ -111,7 +101,7 @@ void LindaCoordinator::erasePublisherByChannel(const std::string &channel) {
                              publishers.begin(),
                              publishers.end(),
                              [&channel](Publisher &p) {
-                                 return p.listeningChannel == channel;
+                                 return p.channel == channel;
                              }),
                      publishers.end());
 }
@@ -120,9 +110,7 @@ std::vector<Reader> LindaCoordinator::getReadersCopy() {
     std::vector<Reader> readers;
     for (const auto &pair: channelToReader) {
         const Reader &reader = pair.second;
-        readers.push_back({reader.pattern,
-                           reader.listeningChannel,
-                           reader.isVip});
+        readers.push_back({reader.pattern, reader.channel, reader.isVip});
     }
     return readers;
 }
@@ -141,17 +129,17 @@ void LindaCoordinator::runReadScenario(const Reader &reader) {
 //    Find matching publisher
     const std::lock_guard<std::mutex> lock(scenariosMutex);
     Publisher publisher = getPublisherByPattern(reader.pattern);
-    if (publisher.listeningChannel.empty()) return;
+    if (publisher.channel.empty()) return;
 
 //    Get tuple from publisher -> send it to the reader
-    communicationService.sendBlocking(reader.isVip ? "Read VIP" : "Read", publisher.listeningChannel);
-    const std::string &tuple = communicationService.receiveBlocking(publisher.listeningChannel);
-    communicationService.sendBlocking(tuple, reader.listeningChannel);
+    communicationService.sendBlocking(reader.isVip ? "Read VIP" : "Read", publisher.channel);
+    const std::string &tuple = communicationService.receiveBlocking(publisher.channel);
+    communicationService.sendBlocking(tuple, reader.channel);
 
 //    Run cleanup logic
     collectionsMutex.lock();
-    if (reader.isVip) erasePublisherByChannel(publisher.listeningChannel);
-    channelToReader.erase(reader.listeningChannel);
+    if (reader.isVip) erasePublisherByChannel(publisher.channel);
+    channelToReader.erase(reader.channel);
     collectionsMutex.unlock();
 }
 

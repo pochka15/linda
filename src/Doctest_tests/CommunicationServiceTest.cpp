@@ -19,7 +19,7 @@ void receiveData() {
     const std::string &data = service->receiveBlocking("Test");
 }
 
-TEST_CASE("listeningChannel is opened and closed without problems") {
+TEST_CASE("channel is opened and closed without problems") {
     const auto &service = std::make_unique<CommunicationService>();
 
     bool isChannelCreated = service->openChannel("Test");
@@ -33,7 +33,7 @@ TEST_CASE("listeningChannel is opened and closed without problems") {
     }
 }
 
-TEST_CASE("can read and write from listeningChannel") {
+TEST_CASE("can read and write from channel") {
     const auto &service = std::make_unique<CommunicationService>();
 
     bool isChannelCreated = service->openChannel("Test");
