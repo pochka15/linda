@@ -12,6 +12,10 @@ struct ReadRequest {
 struct PublishRequest {
     int tupleSize;
     std::string listeningChannel;
+
+    PublisherMeta toMeta() {
+        return {tupleSize, listeningChannel};
+    }
 };
 
 ReadRequest parseReadRequest(const std::string &data) {
@@ -49,16 +53,16 @@ void LindaCoordinator::handleRequests() {
 //        Publish request
         if (startsWith(data, "Publish")) {
             auto request = parsePublishRequest(data);
-            cachedWriterChannel = request.listeningChannel;
+            publishers.push_back(request.toMeta());
         }
 
 //        Read request
         else if (startsWith(data, "Read")) {
             const ReadRequest &request = parseReadRequest(data);
-            cachedReaderChannel = request.listeningChannel;
-            boost::thread t{[this, &request]() {
-                runScenario(request.pattern);
-            }};
+            boost::thread t2(&LindaCoordinator::runScenario,
+                             this,
+                             request.pattern,
+                             request.listeningChannel);
         }
 
 //        Terminate
@@ -70,26 +74,12 @@ void LindaCoordinator::handleRequests() {
 }
 
 /**
- * Hot-fix method. Later it will be refactored
+ * Hot-fix scenario. It's used in the reader request. It gets the tuple from the publisher and sends it back to the reader
  */
-void LindaCoordinator::getTupleFromWriter() {
-    rawReceivedTuple = communicationService.receiveBlocking(cachedWriterChannel);
-}
-
-/**
- * Hot-fix method. Later it will be refactored
- */
-void LindaCoordinator::sendTuple() {
-    communicationService.sendBlocking(rawReceivedTuple, cachedReaderChannel);
-}
-
-/**
- * Hot-fix scenario. It's used in the reader request. It gets the tuple from the writer and sends it back to the reader
- */
-void LindaCoordinator::runScenario(const std::string &pattern) {
-    communicationService.sendBlocking(pattern, cachedWriterChannel);
-    getTupleFromWriter();
-    sendTuple();
+void LindaCoordinator::runScenario(const std::string &pattern, const std::string &readerChannel) {
+    communicationService.sendBlocking(pattern, publishers[0].listeningChannel);
+    const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
+    communicationService.sendBlocking(tuple, readerChannel);
 
 //    Temporarily send terminate request to myself
     communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
