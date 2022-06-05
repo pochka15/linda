@@ -64,7 +64,12 @@ void LindaCoordinator::handleRequests() {
 //        Publish request
         if (startsWith(data, "Publish")) {
             const PublishRequest &request = parsePublishRequest(data);
-            publishers.push_back(request.toPublisher());
+            const Publisher &publisher = request.toPublisher();
+
+            collectionsMutex.lock();
+            publishers.push_back(publisher);
+            collectionsMutex.unlock();
+
             std::thread(&LindaCoordinator::runPublishScenario, this)
                     .detach();
         }
@@ -74,7 +79,12 @@ void LindaCoordinator::handleRequests() {
             const ReadRequest &request = parseReadRequest(
                     data,
                     startsWith(data, "Read VIP"));
-            channelToReader[request.listeningChannel] = request.toReader();
+            const Reader &reader = request.toReader();
+
+            collectionsMutex.lock();
+            channelToReader[request.listeningChannel] = reader;
+            collectionsMutex.unlock();
+
             std::thread(&LindaCoordinator::runReadScenario, this)
                     .detach();
         }
@@ -92,21 +102,31 @@ void LindaCoordinator::handleRequests() {
  * Get a tuple from the publisher and send it back to the reader
  */
 void LindaCoordinator::runReadScenario() {
-    if (publishers.empty()) return;
+//    Check if publisher exists
+    collectionsMutex.lock();
+    bool noPublishers = publishers.empty();
+    collectionsMutex.unlock();
+    if (noPublishers) return;
 
+//    Get tuple from publisher -> send to the reader
+    const std::lock_guard<std::mutex> lock(scenariosMutex);
     Reader &reader = channelToReader.begin()->second;
-
     communicationService.sendBlocking(
             reader.isVip ? "Read VIP" : "Read",
             publishers[0].listeningChannel);
-
     const std::string &tuple = communicationService.receiveBlocking(publishers[0].listeningChannel);
     communicationService.sendBlocking(tuple, reader.listeningChannel);
 
+//    Run cleanup logic
+    collectionsMutex.lock();
     if (reader.isVip) publishers.clear();
     channelToReader.clear();
+    collectionsMutex.unlock();
 }
 
 void LindaCoordinator::runPublishScenario() {
-    if (!channelToReader.empty()) runReadScenario();
+    collectionsMutex.lock();
+    bool readerExists = !channelToReader.empty();
+    collectionsMutex.unlock();
+    if (readerExists) runReadScenario();
 }

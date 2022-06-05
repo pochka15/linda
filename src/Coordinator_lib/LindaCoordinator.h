@@ -7,6 +7,7 @@
 #include <numeric>
 #include <sstream>
 #include <thread>
+#include <mutex>
 #include <map>
 #include "LindaTupleUtils.h"
 #include "CommunicationService.h"
@@ -35,6 +36,8 @@ private:
     const std::string COORDINATOR_CHANNEL = "Coordinator";
     std::vector<Publisher> publishers;
     std::map<std::string, Reader> channelToReader;
+    std::mutex collectionsMutex;
+    std::mutex scenariosMutex;
 
     void runReadScenario();
 
