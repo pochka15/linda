@@ -32,11 +32,6 @@ TEST_CASE("test pattern matching 2") {
     CHECK(!checkIfMatches(tuple, pattern));
 }
 
-TEST_CASE("test negative integer") {
-    const char *pattern = "integer:<0";
-    CHECK(!checkIfMatches({1}, pattern));
-}
-
 TEST_CASE("test hello") {
     CHECK(checkIfMatches({"Hello"}, "string:\"Hello\""));
 }
