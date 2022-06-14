@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "readTupleVip",
+      "payload": {
+        "pattern": "integer:>0, string:\"Hello\", float:*"
+      }
+    }
+  ]
+}

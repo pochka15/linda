@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "readTupleVip",
+      "payload": {
+        "pattern": "string:\"Bye\""
+      }
+    }
+  ]
+}

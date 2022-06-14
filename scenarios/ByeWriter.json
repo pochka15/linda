@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {
+      "name": "publishTuple",
+      "payload": {
+        "tuple": [
+          "Bye"
+        ]
+      }
+    },
+    {
+      "name": "handleRequests"
+    }
+  ]
+}

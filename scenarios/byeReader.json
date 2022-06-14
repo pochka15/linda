@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "readTuple",
+      "payload": {
+        "pattern": "string:\"Bye\""
+      }
+    }
+  ]
+}

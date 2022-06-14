@@ -69,6 +69,7 @@ std::string LindaAgent::readVipBlocking(const std::string &pattern) {
 }
 
 
+// TODO It contains bug. It needs to be tested when parsing json for publisher with tuple ["10"]
 Tuple parseTuple(const nlohmann::basic_json<> &json) {
     Tuple t;
     for (const auto &it: json) {
@@ -90,6 +91,9 @@ std::string LindaAgent::executeScenario(const nlohmann::basic_json<> &scenario) 
             stream << readVipBlocking(action["payload"]["pattern"].get<std::string>()) << '\n';
         } else if (action["name"] == "handleRequests") {
             handleRequestsBlocking();
+        } else if (action["name"] == "terminate") {
+            sleep(1);
+            communicationService.sendBlocking("Terminate", COORDINATOR_CHANNEL);
         }
     }
     return stream.str();
@@ -109,6 +113,7 @@ void LindaAgent::handleRequestsBlocking() {
         } else if (startsWith(data, "Match")) {
             const MatchRequest &request = parseMatchRequest(data);
             bool matches = checkIfMatches(cachedTuple, request.pattern);
+            std::cout << (matches ? "OK" : "Bad") << std::endl;
             communicationService.sendBlocking(matches ? "OK" : "Bad", privateChannel);
         }
     }
