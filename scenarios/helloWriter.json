@@ -4,7 +4,7 @@
       "name": "publishTuple",
       "payload": {
         "tuple": [
-          "10"
+          10
         ]
       }
     },

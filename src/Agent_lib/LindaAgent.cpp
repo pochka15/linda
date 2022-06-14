@@ -69,7 +69,6 @@ std::string LindaAgent::readVipBlocking(const std::string &pattern) {
 }
 
 
-// TODO It contains bug. It needs to be tested when parsing json for publisher with tuple ["10"]
 Tuple parseTuple(const nlohmann::basic_json<> &json) {
     Tuple t;
     for (const auto &it: json) {
